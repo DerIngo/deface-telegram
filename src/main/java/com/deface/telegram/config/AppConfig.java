@@ -63,6 +63,8 @@ public final class AppConfig {
     if (defaultPasteStyle == null) {
       defaultPasteStyle = "feathered";
     }
+    defaultFilterName = defaultFilterName.toLowerCase(java.util.Locale.ROOT);
+    defaultPasteStyle = defaultPasteStyle.toLowerCase(java.util.Locale.ROOT);
 
     validateInList("DEFAULT_FILTER_NAME", defaultFilterName, allowedFilterNames);
     validateInList("DEFAULT_PASTE_STYLE", defaultPasteStyle, allowedPasteStyles);
@@ -158,7 +160,7 @@ public final class AppConfig {
     for (String part : parts) {
       String normalized = normalize(part);
       if (normalized != null) {
-        values.add(normalized);
+        values.add(normalized.toLowerCase(java.util.Locale.ROOT));
       }
     }
     if (values.isEmpty()) {

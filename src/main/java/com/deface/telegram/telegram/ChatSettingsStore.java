@@ -22,6 +22,10 @@ public final class ChatSettingsStore {
   }
 
   public ChatSettings updateFilter(Long chatId, String filterName) {
+    if (!config.getAllowedFilterNames().contains(filterName)) {
+      throw new IllegalArgumentException("Invalid filter. Allowed: "
+          + String.join(", ", config.getAllowedFilterNames()));
+    }
     return settingsByChat.compute(chatId, (id, existing) -> {
       ChatSettings current = existing == null
           ? new ChatSettings(config.getDefaultFilterName(), config.getDefaultPasteStyle())
@@ -31,6 +35,10 @@ public final class ChatSettingsStore {
   }
 
   public ChatSettings updatePasteStyle(Long chatId, String pasteStyle) {
+    if (!config.getAllowedPasteStyles().contains(pasteStyle)) {
+      throw new IllegalArgumentException("Invalid paste style. Allowed: "
+          + String.join(", ", config.getAllowedPasteStyles()));
+    }
     return settingsByChat.compute(chatId, (id, existing) -> {
       ChatSettings current = existing == null
           ? new ChatSettings(config.getDefaultFilterName(), config.getDefaultPasteStyle())

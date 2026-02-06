@@ -110,12 +110,12 @@ public final class DefaceTelegramBot extends TelegramLongPollingBot {
         reply(message.getChatId(), "Usage: /filter <name>");
         return;
       }
-      if (!config.getAllowedFilterNames().contains(value)) {
-        reply(message.getChatId(), "Invalid filter. Allowed: " + String.join(", ", config.getAllowedFilterNames()));
-        return;
+      try {
+        ChatSettingsStore.ChatSettings settings = settingsStore.updateFilter(message.getChatId(), value);
+        reply(message.getChatId(), "Filter set to " + settings.filterName());
+      } catch (IllegalArgumentException e) {
+        reply(message.getChatId(), e.getMessage());
       }
-      ChatSettingsStore.ChatSettings settings = settingsStore.updateFilter(message.getChatId(), value);
-      reply(message.getChatId(), "Filter set to " + settings.filterName());
       return;
     }
 
@@ -125,13 +125,12 @@ public final class DefaceTelegramBot extends TelegramLongPollingBot {
         reply(message.getChatId(), "Usage: /paste <name>");
         return;
       }
-      if (!config.getAllowedPasteStyles().contains(value)) {
-        reply(message.getChatId(), "Invalid paste style. Allowed: "
-            + String.join(", ", config.getAllowedPasteStyles()));
-        return;
+      try {
+        ChatSettingsStore.ChatSettings settings = settingsStore.updatePasteStyle(message.getChatId(), value);
+        reply(message.getChatId(), "Paste style set to " + settings.pasteStyle());
+      } catch (IllegalArgumentException e) {
+        reply(message.getChatId(), e.getMessage());
       }
-      ChatSettingsStore.ChatSettings settings = settingsStore.updatePasteStyle(message.getChatId(), value);
-      reply(message.getChatId(), "Paste style set to " + settings.pasteStyle());
     }
   }
 
@@ -248,7 +247,10 @@ public final class DefaceTelegramBot extends TelegramLongPollingBot {
       return null;
     }
     String candidate = parts[1].trim();
-    return candidate.isEmpty() ? null : candidate;
+    if (candidate.isEmpty()) {
+      return null;
+    }
+    return candidate.toLowerCase(java.util.Locale.ROOT);
   }
 
   private String buildHelpMessage() {
