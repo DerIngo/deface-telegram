@@ -13,19 +13,25 @@ public final class AppConfig {
   private final String defaceEndpoint;
   private final String defaultFilterName;
   private final String defaultPasteStyle;
+  private final java.util.List<String> allowedFilterNames;
+  private final java.util.List<String> allowedPasteStyles;
 
   private AppConfig(
       String telegramBotToken,
       String telegramBotUsername,
       String defaceEndpoint,
       String defaultFilterName,
-      String defaultPasteStyle
+      String defaultPasteStyle,
+      java.util.List<String> allowedFilterNames,
+      java.util.List<String> allowedPasteStyles
   ) {
     this.telegramBotToken = telegramBotToken;
     this.telegramBotUsername = telegramBotUsername;
     this.defaceEndpoint = defaceEndpoint;
     this.defaultFilterName = defaultFilterName;
     this.defaultPasteStyle = defaultPasteStyle;
+    this.allowedFilterNames = allowedFilterNames;
+    this.allowedPasteStyles = allowedPasteStyles;
   }
 
   public static AppConfig load() {
@@ -66,7 +72,9 @@ public final class AppConfig {
         telegramBotUsername,
         defaceEndpoint,
         defaultFilterName,
-        defaultPasteStyle
+        defaultPasteStyle,
+        allowedFilterNames,
+        allowedPasteStyles
     );
   }
 
@@ -88,6 +96,14 @@ public final class AppConfig {
 
   public String getDefaultPasteStyle() {
     return defaultPasteStyle;
+  }
+
+  public java.util.List<String> getAllowedFilterNames() {
+    return allowedFilterNames;
+  }
+
+  public java.util.List<String> getAllowedPasteStyles() {
+    return allowedPasteStyles;
   }
 
   private static String resolve(
