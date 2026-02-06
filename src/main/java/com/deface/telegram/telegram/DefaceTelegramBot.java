@@ -37,11 +37,13 @@ public final class DefaceTelegramBot extends TelegramLongPollingBot {
 
   private final AppConfig config;
   private final DefaceClient defaceClient;
+  private final ChatSettingsStore settingsStore;
   private final HttpClient httpClient;
 
-  public DefaceTelegramBot(AppConfig config, DefaceClient defaceClient) {
+  public DefaceTelegramBot(AppConfig config, DefaceClient defaceClient, ChatSettingsStore settingsStore) {
     this.config = Objects.requireNonNull(config, "config");
     this.defaceClient = Objects.requireNonNull(defaceClient, "defaceClient");
+    this.settingsStore = Objects.requireNonNull(settingsStore, "settingsStore");
     this.httpClient = HttpClient.newBuilder()
         .connectTimeout(CONNECT_TIMEOUT)
         .build();
@@ -92,6 +94,44 @@ public final class DefaceTelegramBot extends TelegramLongPollingBot {
     if ("/help".equals(command)) {
       logger.info("Handling /help for chat {}", message.getChatId());
       reply(message.getChatId(), buildHelpMessage());
+      return;
+    }
+
+    if ("/status".equals(command)) {
+      ChatSettingsStore.ChatSettings settings = settingsStore.get(message.getChatId());
+      reply(message.getChatId(), "Filter: " + settings.filterName()
+          + "\nPaste style: " + settings.pasteStyle());
+      return;
+    }
+
+    if ("/filter".equals(command)) {
+      String value = extractArgument(text);
+      if (value == null) {
+        reply(message.getChatId(), "Usage: /filter <name>");
+        return;
+      }
+      if (!config.getAllowedFilterNames().contains(value)) {
+        reply(message.getChatId(), "Invalid filter. Allowed: " + String.join(", ", config.getAllowedFilterNames()));
+        return;
+      }
+      ChatSettingsStore.ChatSettings settings = settingsStore.updateFilter(message.getChatId(), value);
+      reply(message.getChatId(), "Filter set to " + settings.filterName());
+      return;
+    }
+
+    if ("/paste".equals(command)) {
+      String value = extractArgument(text);
+      if (value == null) {
+        reply(message.getChatId(), "Usage: /paste <name>");
+        return;
+      }
+      if (!config.getAllowedPasteStyles().contains(value)) {
+        reply(message.getChatId(), "Invalid paste style. Allowed: "
+            + String.join(", ", config.getAllowedPasteStyles()));
+        return;
+      }
+      ChatSettingsStore.ChatSettings settings = settingsStore.updatePasteStyle(message.getChatId(), value);
+      reply(message.getChatId(), "Paste style set to " + settings.pasteStyle());
     }
   }
 
@@ -106,8 +146,10 @@ public final class DefaceTelegramBot extends TelegramLongPollingBot {
     try {
       logger.info("Downloading Telegram file for chat {}", chatId);
       byte[] originalImage = downloadTelegramFile(bestPhoto.get().getFileId());
-      logger.info("Calling deface API for chat {}", chatId);
-      byte[] processedImage = defaceClient.defaceImage(originalImage);
+      ChatSettingsStore.ChatSettings settings = settingsStore.get(chatId);
+      logger.info("Calling deface API for chat {} filter={} paste={}", chatId, settings.filterName(),
+          settings.pasteStyle());
+      byte[] processedImage = defaceClient.defaceImage(originalImage, settings.filterName(), settings.pasteStyle());
       sendPhoto(chatId, processedImage);
       logger.info("Processed image sent for chat {}", chatId);
     } catch (Exception e) {
@@ -200,10 +242,24 @@ public final class DefaceTelegramBot extends TelegramLongPollingBot {
     return firstToken;
   }
 
+  private String extractArgument(String text) {
+    String[] parts = text.split("\\s+", 2);
+    if (parts.length < 2) {
+      return null;
+    }
+    String candidate = parts[1].trim();
+    return candidate.isEmpty() ? null : candidate;
+  }
+
   private String buildHelpMessage() {
     return "Commands:\n"
         + "/start - start the bot\n"
         + "/help - show this help\n"
-        + "Send a photo to process it with the default settings.";
+        + "/filter <name> - set filter\n"
+        + "/paste <name> - set paste style\n"
+        + "/status - show current settings\n"
+        + "Allowed filters: " + String.join(", ", config.getAllowedFilterNames()) + "\n"
+        + "Allowed paste styles: " + String.join(", ", config.getAllowedPasteStyles()) + "\n"
+        + "Send a photo to process it with the current settings.";
   }
 }

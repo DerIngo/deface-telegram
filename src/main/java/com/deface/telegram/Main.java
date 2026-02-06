@@ -2,6 +2,7 @@ package com.deface.telegram;
 
 import com.deface.telegram.config.AppConfig;
 import com.deface.telegram.deface.DefaceClient;
+import com.deface.telegram.telegram.ChatSettingsStore;
 import com.deface.telegram.telegram.DefaceTelegramBot;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +27,8 @@ public final class Main {
 
       TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
       DefaceClient defaceClient = new DefaceClient(config);
-      botsApi.registerBot(new DefaceTelegramBot(config, defaceClient));
+      ChatSettingsStore settingsStore = new ChatSettingsStore(config);
+      botsApi.registerBot(new DefaceTelegramBot(config, defaceClient, settingsStore));
       logger.info("Telegram bot registered and polling");
     } catch (IllegalStateException e) {
       logger.error("Configuration error: {}", e.getMessage(), e);
