@@ -1,0 +1,9 @@
+services:
+  deface-telegram:
+    build: .
+    environment:
+      - TELEGRAM_BOT_TOKEN
+      - TELEGRAM_BOT_USERNAME
+      - DEFACE_ENDPOINT
+      - DEFAULT_FILTER_NAME
+      - DEFAULT_PASTE_STYLE
