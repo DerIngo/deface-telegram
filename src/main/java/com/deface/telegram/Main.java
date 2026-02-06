@@ -1,13 +1,17 @@
 package com.deface.telegram;
 
 import com.deface.telegram.config.AppConfig;
-import com.deface.telegram.telegram.ChatSettingsStore;
+import com.deface.telegram.deface.DefaceClient;
 import com.deface.telegram.telegram.DefaceTelegramBot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.meta.TelegramBotsApi;
 import org.telegram.telegrambots.meta.exceptions.TelegramApiException;
 import org.telegram.telegrambots.updatesreceivers.DefaultBotSession;
 
 public final class Main {
+  private static final Logger logger = LoggerFactory.getLogger(Main.class);
+
   private Main() {
   }
 
@@ -15,20 +19,21 @@ public final class Main {
     try {
       AppConfig config = AppConfig.load();
 
-      System.out.println("Deface Telegram Bot starting");
-      System.out.println("DEFACE_ENDPOINT=" + safe(config.getDefaceEndpoint()));
-      System.out.println("DEFAULT_FILTER_NAME=" + config.getDefaultFilterName());
-      System.out.println("DEFAULT_PASTE_STYLE=" + config.getDefaultPasteStyle());
+      logger.info("Deface Telegram Bot starting");
+      logger.info("DEFACE_ENDPOINT={}", safe(config.getDefaceEndpoint()));
+      logger.info("DEFAULT_FILTER_NAME={}", config.getDefaultFilterName());
+      logger.info("DEFAULT_PASTE_STYLE={}", config.getDefaultPasteStyle());
 
       TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
-      ChatSettingsStore settingsStore = new ChatSettingsStore(config);
-      botsApi.registerBot(new DefaceTelegramBot(config, settingsStore));
+      DefaceClient defaceClient = new DefaceClient(config);
+      botsApi.registerBot(new DefaceTelegramBot(config, defaceClient));
+      logger.info("Telegram bot registered and polling");
     } catch (IllegalStateException e) {
-      System.err.println("Configuration error: " + e.getMessage());
-      System.err.println("Set required environment variables or provide values in .env/application.properties.");
+      logger.error("Configuration error: {}", e.getMessage(), e);
+      logger.error("Set required environment variables or provide values in .env/application.properties.");
       System.exit(1);
     } catch (TelegramApiException e) {
-      System.err.println("Failed to start Telegram bot: " + e.getMessage());
+      logger.error("Failed to start Telegram bot", e);
       System.exit(1);
     }
   }

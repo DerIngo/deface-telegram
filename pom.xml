@@ -28,6 +28,12 @@
       <artifactId>telegrambots</artifactId>
       <version>${telegrambots.version}</version>
     </dependency>
+    <dependency>
+      <groupId>ch.qos.logback</groupId>
+      <artifactId>logback-classic</artifactId>
+      <version>1.5.6</version>
+      <scope>runtime</scope>
+    </dependency>
   </dependencies>
 
   <build>
